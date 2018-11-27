@@ -540,11 +540,24 @@ public class GameWindow{
         btn22.setEnabled(enable);
     }
 
+    public void clearButtons(){
+        btn00.setText("");
+        btn01.setText("");
+        btn02.setText("");
+        btn10.setText("");
+        btn11.setText("");
+        btn12.setText("");
+        btn20.setText("");
+        btn21.setText("");
+        btn22.setText("");
+    }
+
     public void enableSubmitButton(boolean enable){
         btnS.setEnabled(enable);
     }
 
     public void displayGameBoard(){
+        clearButtons();
         mainMenuPanel.setVisible(false);
         hostPanel.setVisible(false);
         joinPanel.setVisible(false);

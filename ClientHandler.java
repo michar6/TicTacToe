@@ -91,12 +91,18 @@ class ClientHandler extends Thread{
             String gameList[] = Arrays.copyOf(server.listGames().toArray(), server.listGames().toArray().length, String[].class);
             public void run(){
                 try {
-                    out.writeInt(gameList.length);
+                    //out.writeUTF("JOIN Start List");
                     System.out.println(gameList.length);
                     for(int i = 0; i < gameList.length; i++){
                         System.out.println(gameList[i]);
-                        out.writeUTF(gameList[i]);
+
+                        if(!server.getGameReadyStatus(gameList[i])){
+                            out.writeUTF("JOIN List " + gameList[i]);
+                        }
                     }
+
+                    out.writeUTF("JOIN /.Done");
+
                 } catch (IOException e) {
                     System.out.println("IOException in joinOperation()");
                 }

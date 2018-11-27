@@ -99,6 +99,7 @@ public class Game {
      */
     public void playGame(Socket player) throws IOException {
         try{
+            initializeBoard();
 //            playerTurn = (int)(Math.random() * 2 + 1);
             playerTurn = 1;
 
@@ -162,22 +163,6 @@ public class Game {
                     System.out.println("==end P2==============================");
                 }
 
-                // Check if a player "Exit"ed the game
-//                if(p1In.available() > 0 && player == player1){
-//                    String request = p1In.readUTF();
-//                    System.out.println("Exit request? " + request);
-//                    if(request.substring(request.indexOf(' ')).trim().equalsIgnoreCase("Exit")){
-//                        playerExit = true;
-//                    }
-//                }
-//
-//                if(p2In.available() > 0 && player == player2){
-//                    String request = p2In.readUTF();
-//                    System.out.println("Exit request? " + request);
-//                    if(request.substring(request.indexOf(' ')).trim().equalsIgnoreCase("Exit")){
-//                        playerExit = true;
-//                    }
-//                }
             }
 
             // ---------------------- Let both players know game is over ------
@@ -198,6 +183,7 @@ public class Game {
                 return;
             }
 
+            // ---------------------- Update both players final boards --------
             if(player == player1) {
                 p1Out.writeUTF("GAME Over");
                 sendUpdatedBoard(p1Out);
@@ -207,7 +193,7 @@ public class Game {
                 sendUpdatedBoard(p2Out);
             }
 
-            // Send "Tie," or "You Won"/ "You Lost"
+            // ---------------------- Send "Tie," "You Won," or "You Lost" ----
             if(movesMade == MAX_MOVES){ // TIE
                 if(player == player1) p1Out.writeUTF("GAME Tie");
                 else p2Out.writeUTF("GAME Tie");
@@ -221,6 +207,7 @@ public class Game {
                 }
             }
 
+            // END OF THE GAME, RETURN
 
         }catch(IOException e){
             System.out.println("IOException in playGame() in Game");
@@ -263,7 +250,6 @@ public class Game {
         System.out.println();
     }
 
-
     public void markBoard(int indexToMark, char mark){
         System.out.println("Index To Mark: " + indexToMark);
         int row = indexToMark / 10;
@@ -272,11 +258,19 @@ public class Game {
         board[row][col] = mark;
     }
 
-
     public void switchPlayerTurn(){
         System.out.print("playerTurn : " + playerTurn);
         if(playerTurn == 1) playerTurn = 2;
         else if(playerTurn == 2) playerTurn = 1;
         System.out.println("->" + playerTurn);
+    }
+
+    public void initializeBoard(){
+        for(int i = 0; i < board.length; i++){
+            for(int j = 0; j < board[i].length; j++){
+                board[i][j] = 'G';
+            }
+        }
+
     }
 }

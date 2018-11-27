@@ -109,13 +109,20 @@ public class Client {
         Thread t = new Thread(new Runnable(){
             public void run(){
                 try {
-                    int gameListCount = in.readInt();
-                    System.out.println(gameListCount);
-                    for(int i = 0; i < gameListCount; i++){
-                        String gameEntry = in.readUTF();
-                        //System.out.println(gameEntry);
+                    //int gameListCount = in.readInt();
+                    //System.out.println(gameListCount);
+                    String gameEntry = in.readUTF();
+//                    gameEntry = gameEntry.substring(gameEntry.lastIndexOf(' ')).trim();
+                    System.out.println("Updating Join List");
+                    System.out.println("GameEntry: " + gameEntry);
+                    while(!gameEntry.contains("/.Done")){
+                        System.out.println(gameEntry);
+                        gameEntry = gameEntry.substring(gameEntry.lastIndexOf(' ')).trim();
+                        System.out.println(gameEntry);
                         game.addHost(gameEntry);
+                        gameEntry = in.readUTF();
                     }
+                    System.out.println("Done listing all games");
 
                 } catch (IOException e) {
                     System.out.println("IOException in Thread in joinOperation()");
@@ -243,7 +250,7 @@ public class Client {
 
         // ---------------------- Modify label text on game board -------------
         String player = in.readUTF();
-        player.substring(player.indexOf(' ')).trim();
+        player = player.substring(player.indexOf(' ')).trim();
         game.setGameLabel(player);
 
         // ---------------------- "your turn" or "wait" -----------------------
@@ -344,6 +351,15 @@ public class Client {
         game.enableButtons(false);
 
         // Wait for exit button to be clicked
+        while(!game.exit){System.out.print("");}
+
+        // Return to main menu
+        if(game.exit){
+            game.exit = false;
+            game.displayMainMenu();
+            game.enableButtons(true);
+            return;
+        }
     }
 
     public void updateBoard() throws IOException{
