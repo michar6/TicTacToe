@@ -43,8 +43,8 @@ public class Game {
 
     }
 
-    /* setSecondPlayer:
-     * Preconditions:
+    /* setSecondPlayer: Used to establish second player
+     * Preconditions: Socket argument that communicates with the second client
      * Postconditions: Initialize data output stream and assign socket for P2
      */
     public void setSecondPlayer(Socket secondPlayer){
@@ -57,87 +57,169 @@ public class Game {
         }
     }
 
-    /* gameReady:
+    /* gameReady: Used to decide whether the game is ready to play.
      * Preconditions:
-     * Postconditions:
+     * Postconditions: True if both player sockets are populated and not null.
      */
     public boolean gameReady(){
         return (player1 != null) && (player2 != null);
     }
 
+    /* gameWonBy: Used to decide whether to send "You Won" or "You Lost" to the
+     *            appropriate player.
+     * Preconditions: Use a char argument to represent the player.
+     * Postconditions: Return true if player (defined by char) won.
+     */
+    public boolean gameWonBy(char player){
+        return (board[0][0] == player && board[0][1] == player && board[0][2] == player) ||  // Horizontal wins
+                (board[1][0] == player && board[1][1] == player && board[1][2] == player) ||
+                (board[2][0] == player && board[2][1] == player && board[2][2] == player) ||
+                (board[0][0] == player && board[1][0] == player && board[2][0] == player) || // Vertical wins
+                (board[0][1] == player && board[1][1] == player && board[2][1] == player) ||
+                (board[0][2] == player && board[1][2] == player && board[2][2] == player) ||
+                (board[0][0] == player && board[1][1] == player && board[2][2] == player) || // Diagonal wins
+                (board[0][2] == player && board[1][1] == player && board[2][0] == player);
+    }
+
+    /* gameOver: Used to decide if the game is over by checking number of moves
+     *           made or if a player has won.
+     * Preconditions:
+     * Postconditions: Return true if number of moves made equals 9 or either
+     *                 player has one.
+     */
     public boolean gameOver(){
-        return movesMade == MAX_MOVES;
+        return movesMade == MAX_MOVES || gameWonBy(PLAYER_ONE_MARK) || gameWonBy(PLAYER_TWO_MARK);
     }
 
 
+    /* playGame:
+     * Preconditions: Socket of the associated player deciding, within function,
+     *                which procedure to follow whether "Wait" or "Your Turn."
+     * Postconditions: Loops through game loop until gameOver() returns true.
+     */
     public void playGame(Socket player) throws IOException {
         try{
 //            playerTurn = (int)(Math.random() * 2 + 1);
             playerTurn = 1;
 
             // ---------------------- Set game labels -------------------------
-            if(player == player1) p1Out.writeUTF("PLAYER ONE");
-            else if(player == player2) p2Out.writeUTF("PLAYER TWO");
+            if(player == player1) p1Out.writeUTF("GAME PLAYER ONE");
+            else if(player == player2) p2Out.writeUTF("GAME PLAYER TWO");
 
             System.out.println("Starting gameloop");
+            boolean playerExit = false;
             // ---------------------- Which player thread ---------------------
-            while(!gameOver()) {
+            while(!gameOver() && !playerExit) {
 
                 if (player == player1) { // PLAYER ONE
                     System.out.println("-------------PLAYER ONE--------------");
-
                     if (playerTurn == 1) {
                         System.out.println("p1 turn");
-                        commWithPlayer(p1Out, p1In, PLAYER_ONE_MARK);
+                        if(!commWithPlayer(p1Out, p1In, PLAYER_ONE_MARK)) {
+                            playerExit = true;
+                            break;
+                        }
                         System.out.println("    Sending p2 \"Ready\" from p1");
                         movesMade++;
-                        p2Out.writeUTF("Ready");
+                        p2Out.writeUTF("GAME Ready");
                         p2Out.flush();
                     } else {
                         System.out.println("p1 wait");
-                        p1Out.writeUTF("Wait");
+                        p1Out.writeUTF("GAME Wait");
                         p1Out.flush();
                         System.out.println( "P1 Receiving..");
                         String response = p1In.readUTF();
-
+                        response = response.substring(response.indexOf(' ')).trim();
                         System.out.println("    P1 Response: " + response);
-
-
+                        if(response.equalsIgnoreCase("Exit")) playerExit = true;
                     }
-
                     System.out.println("--end P1---------------------------------");
-
                 } else if (player == player2) {
                     System.out.println("=============PLAYER TWO=============");
 
                     if (playerTurn == 2) { // PLAYER TWO
                         System.out.println("p2 turn");
-                        commWithPlayer(p2Out, p2In, PLAYER_TWO_MARK);
+                        if(!commWithPlayer(p2Out, p2In, PLAYER_TWO_MARK)) {
+                            playerExit = true;
+                            break;
+                        }
                         movesMade++;
-                        p1Out.writeUTF("Ready");
+                        p1Out.writeUTF("GAME Ready");
                         p1Out.flush();
 
                     } else {
                         System.out.println("p2 wait");
-                        p2Out.writeUTF("Wait");
+                        p2Out.writeUTF("GAME Wait");
                         p2Out.flush();
 
                         System.out.println("    P2 Receiving..");
                         String response = p2In.readUTF();
+                        response = response.substring(response.indexOf(' ')).trim();
                         System.out.println("    P2 Recieved: " + response);
-                    }
+                        if(response.equalsIgnoreCase("Exit")) playerExit = true;
 
+                    }
                     System.out.println("==end P2==============================");
                 }
 
+                // Check if a player "Exit"ed the game
+//                if(p1In.available() > 0 && player == player1){
+//                    String request = p1In.readUTF();
+//                    System.out.println("Exit request? " + request);
+//                    if(request.substring(request.indexOf(' ')).trim().equalsIgnoreCase("Exit")){
+//                        playerExit = true;
+//                    }
+//                }
+//
+//                if(p2In.available() > 0 && player == player2){
+//                    String request = p2In.readUTF();
+//                    System.out.println("Exit request? " + request);
+//                    if(request.substring(request.indexOf(' ')).trim().equalsIgnoreCase("Exit")){
+//                        playerExit = true;
+//                    }
+//                }
             }
 
-            p1Out.writeUTF("over");
-            p2Out.writeUTF("over");
+            // ---------------------- Let both players know game is over ------
+            if(playerExit){
+                if(player == player1) {
+                    p1Out.writeUTF("GAME Exited");
+                    if(playerTurn == 1){
+                        p2Out.writeUTF("GAME Exited");
+                    }
 
-//            sendUpdatedBoard(p1Out);
-//            sendUpdatedBoard(p2Out);
+                }
+                else {
+                    p2Out.writeUTF("GAME Exited");
+                    if(playerTurn == 2){
+                        p1Out.writeUTF("GAME Exited");
+                    }
+                }
+                return;
+            }
+
+            if(player == player1) {
+                p1Out.writeUTF("GAME Over");
+                sendUpdatedBoard(p1Out);
+            }
+            else {
+                p2Out.writeUTF("GAME Over");
+                sendUpdatedBoard(p2Out);
+            }
+
             // Send "Tie," or "You Won"/ "You Lost"
+            if(movesMade == MAX_MOVES){ // TIE
+                if(player == player1) p1Out.writeUTF("GAME Tie");
+                else p2Out.writeUTF("GAME Tie");
+            } else {
+                if(gameWonBy(PLAYER_ONE_MARK)) {
+                    if(player == player1) p1Out.writeUTF("GAME You Won");
+                    else p2Out.writeUTF("GAME You Lost");
+                } else{
+                    if(player == player1) p1Out.writeUTF("GAME You Lost");
+                    else p2Out.writeUTF("GAME You Won");
+                }
+            }
 
 
         }catch(IOException e){
@@ -145,24 +227,30 @@ public class Game {
         }
     }
 
-    public void commWithPlayer(DataOutputStream out, DataInputStream in, char mark) throws IOException{
-        out.writeUTF("Your Turn");
+    public boolean commWithPlayer(DataOutputStream out, DataInputStream in, char mark) throws IOException{
+        out.writeUTF("GAME Your Turn");
 
         // ---------------------- Send info about game board ------------------
         sendUpdatedBoard(out);
 
         // ---------------------- Get new marked button from player -----------
-        int indexToMark = in.readInt();
+        String indexRequest = in.readUTF();
+        System.out.println(indexRequest);
+        indexRequest = indexRequest.substring(indexRequest.lastIndexOf(' ')).trim();
+        System.out.println(indexRequest);
+        if(indexRequest.equalsIgnoreCase("Exit")) return false;
+        int indexToMark = Integer.parseInt(indexRequest);
         System.out.println("indexToMark: " + indexToMark);
         markBoard(indexToMark, mark);
 
         // ---------------------- Inform player that mark was made ------------
-        out.writeUTF("Mark Made");
+        out.writeUTF("GAME Mark Made");
         out.flush();
 
         sendUpdatedBoard(out);
 
         switchPlayerTurn();
+        return true;
     }
 
     public void sendUpdatedBoard(DataOutputStream out) throws IOException {

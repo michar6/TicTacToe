@@ -45,6 +45,7 @@ public class GameWindow{
     public JButton btn20 = new JButton();
     public JButton btn21 = new JButton();
     public JButton btn22 = new JButton();
+    private JButton btnS;
 
     public JButton[][] buttons;
 
@@ -53,20 +54,7 @@ public class GameWindow{
 
     public HashMap<Integer, JButton> board = new HashMap<>();
 
-
     /**
-     * Launch the application.
-     */
-//	public void run() {
-//		try {
-//			GameWindow window = new GameWindow();
-//			window.frmGameWindow.setVisible(true);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//		}
-//	}
-
-	/**
 	 * Create the application.
 	 */
 	public GameWindow() {
@@ -163,7 +151,7 @@ public class GameWindow{
         gameNameTextField = new JTextField();
         gameNameTextField.setColumns(10);
 		
-		JButton btnS = new JButton("Submit");
+		btnS = new JButton("Submit");
 		btnS.setBackground(Color.WHITE);
 		btnS.setForeground(new Color(139, 0, 0));
 		
@@ -310,7 +298,7 @@ public class GameWindow{
 		turnLabel = new JLabel("[Wait/YourTurn]");
 		turnLabel.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		
-		JButton btnNewButton = new JButton("Exit");
+		JButton gameExitButton = new JButton("Exit");
 		GroupLayout gl_gameContent = new GroupLayout(gameContent);
 		gl_gameContent.setHorizontalGroup(
 			gl_gameContent.createParallelGroup(Alignment.LEADING)
@@ -322,7 +310,7 @@ public class GameWindow{
 							.addComponent(gameLabel)
 							.addPreferredGap(ComponentPlacement.RELATED, 266, Short.MAX_VALUE)
 							.addComponent(turnLabel))
-						.addComponent(btnNewButton, Alignment.TRAILING))
+						.addComponent(gameExitButton, Alignment.TRAILING))
 					.addContainerGap())
 		);
 		gl_gameContent.setVerticalGroup(
@@ -335,20 +323,23 @@ public class GameWindow{
 					.addPreferredGap(ComponentPlacement.UNRELATED)
 					.addComponent(gameplayPanel, GroupLayout.PREFERRED_SIZE, 257, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.UNRELATED)
-					.addComponent(btnNewButton)
+					.addComponent(gameExitButton)
 					.addContainerGap(16, Short.MAX_VALUE))
 		);
 		gameplayPanel.setLayout(new GridLayout(3, 3, 3, 3));
         gameplayPanel.setBackground(new Color(255, 255, 255));
-		
+
+        gameExitButton.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent arg0){
+                exit = true;
+            }
+        });
+
 		btn00 = new JButton();
 		gameplayPanel.add(btn00);
 
         btn00.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn00.setEnabled(false);
-//                board.put(0, btn00);
-                System.out.println("00");
                 TTTButtonClicked = true;
                 TTTButton = 0;
             }
@@ -359,8 +350,6 @@ public class GameWindow{
 
         btn01.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn01.setEnabled(false);
-//                board.put(1, btn01);
                 TTTButtonClicked = true;
                 TTTButton = 1;
             }
@@ -371,8 +360,6 @@ public class GameWindow{
 
         btn02.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn02.setEnabled(false);
-//                board.put(2, btn02);
                 TTTButtonClicked = true;
                 TTTButton = 2;
             }
@@ -383,8 +370,6 @@ public class GameWindow{
 
         btn10.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn10.setEnabled(false);
-//                board.put(10, btn10);
                 TTTButtonClicked = true;
                 TTTButton = 10;
             }
@@ -395,8 +380,6 @@ public class GameWindow{
 
         btn11.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn11.setEnabled(false);
-//                board.put(11, btn11);
                 TTTButtonClicked = true;
                 TTTButton = 11;
             }
@@ -407,8 +390,6 @@ public class GameWindow{
 
         btn12.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn12.setEnabled(false);
-//                board.put(12, btn12);
                 TTTButtonClicked = true;
                 TTTButton = 12;
             }
@@ -419,8 +400,6 @@ public class GameWindow{
 
         btn20.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn20.setEnabled(false);
-//                board.put(20, btn20);
                 TTTButtonClicked = true;
                 TTTButton = 20;
             }
@@ -431,8 +410,6 @@ public class GameWindow{
 
         btn21.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-//                btn21.setEnabled(false);
-//                board.put(21, btn21);
                 TTTButtonClicked = true;
                 TTTButton = 21;
             }
@@ -444,8 +421,6 @@ public class GameWindow{
 
 		btn22.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0) {
-//                btn22.setEnabled(false);
-                //board.put(22, btn22);
                 TTTButtonClicked = true;
                 TTTButton = 22;
             }
@@ -565,13 +540,23 @@ public class GameWindow{
         btn22.setEnabled(enable);
     }
 
+    public void enableSubmitButton(boolean enable){
+        btnS.setEnabled(enable);
+    }
+
     public void displayGameBoard(){
         mainMenuPanel.setVisible(false);
         hostPanel.setVisible(false);
         joinPanel.setVisible(false);
         gameplayPanel.setVisible(true);
         gamePanel.setVisible(true);
+    }
 
+    public void displayMainMenu(){
+        mainMenuPanel.setVisible(true);
+        hostPanel.setVisible(false);
+        joinPanel.setVisible(false);
+        gamePanel.setVisible(false);
     }
 
 

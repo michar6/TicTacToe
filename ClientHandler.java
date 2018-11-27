@@ -132,10 +132,13 @@ class ClientHandler extends Thread{
      */
     public void gameOperation() throws IOException{
         System.out.println("GAME OPERATION IN CLIENT HANDLER FOR " + clientSocket);
-
         System.out.println("Current game ID: " + currentGameId);
+
+        // Play game
         server.getGame(currentGameId).playGame(clientSocket);
 
+        // Remove game from list since two players are already in
+        server.removeGame(currentGameId);
     }
 
     /* run:

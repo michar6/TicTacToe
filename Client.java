@@ -74,27 +74,6 @@ public class Client {
 	    else return socket.isConnected();
     }
 
-    /* getAvailableGames:   JOINING
-     * Preconditions:
-     * Postconditions: Return list of gameID's to populate UI with.
-     */
-
-    /* UiPopulateGameList:  JOINING
-     * Preconditions:
-     * Postconditions: Populate list with all games ready to be played.
-     */
-
-    /* createGame:          HOSTING
-     * Preconditions: gameID that doesn't already exist
-     * Postconditions: False if gameID already exists, true otherwise.
-     */
-
-    /* joinGame:            JOINING
-     * Preconditions: gameID that exists in the gameList
-     * Postconditions: Send to server the gameID client wishes to join.
-     *                 Return true if client recieves ACK, false otherwise.
-     */
-
     /* mainOperation:
      * Preconditions:
      * Postconditions:
@@ -247,7 +226,7 @@ public class Client {
             System.out.println(gameId + " is valid");
 
             // ---------------------- Create new game -------------------------
-            waitForGameStart();
+            waitForGameStart(gameId);
         }
     }
 
@@ -264,16 +243,19 @@ public class Client {
 
         // ---------------------- Modify label text on game board -------------
         String player = in.readUTF();
+        player.substring(player.indexOf(' ')).trim();
         game.setGameLabel(player);
 
         // ---------------------- "your turn" or "wait" -----------------------
 
         String turn = "";
         System.out.println("Starting gameLoop");
-        while(!turn.equalsIgnoreCase("over")) {
-            turn = in.readUTF();
-            System.out.println("TURN: " + turn);
-            game.setTurnLabel(turn);
+        turn = in.readUTF();
+        turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
+        System.out.println("TURN: " + turn);
+        game.setTurnLabel(turn);
+        game.exit = false;
+        while(!turn.equalsIgnoreCase("Over") && !game.exit) { // Also check if "Exit" is clicked
 
             if (turn.equalsIgnoreCase("Your Turn")) {
                 // ---------------------- Check for updates on board ----------
@@ -281,12 +263,16 @@ public class Client {
 
                 System.out.println("-Playing- After thread");
                 // ---------------------- Mark board --------------------------
-                while (!game.TTTButtonClicked) { System.out.print(""); }
+                while (!game.TTTButtonClicked && !game.exit) { System.out.print(""); }
+                if(game.exit) {
+                    System.out.println("WAS ABOUT TO MAKE MOVE BUT EXITED");
+                    break;
+                }
                 game.TTTButtonClicked = false;
                 System.out.println("-Playing- After click");
 
                 // ---------------------- Send update -------------------------
-                out.writeInt(game.TTTButton);
+                out.writeUTF("GAME mark " + game.TTTButton);
                 out.flush();
                 System.out.println("-Playing- Sent: " + game.TTTButton);
                 String response = in.readUTF();
@@ -298,27 +284,66 @@ public class Client {
                 // Disable board
                 game.enableButtons(false);
 
+                System.out.println("Waiting and waiting for response");
                 String response = in.readUTF();
+                response = response.substring(response.indexOf(' ')).trim(); // GAME' 'Ready
                 System.out.println("Response length: " + response.length());
                 System.out.println("Response: " + response);
                 System.out.println("Wait for Ready");
 
-                while(!response.equalsIgnoreCase("Ready")) {
+                while(!response.equalsIgnoreCase("Ready") && !response.equalsIgnoreCase("Exited")) {
                     System.out.print(".");
                     response = in.readUTF();
                     System.out.println("Got response: " + response);
                 }
 
-                out.writeUTF("Client Ready");
+                if(response.equalsIgnoreCase("Exited")) {
+                    System.out.println("WAS WAITING NOW EXITED");
+                    game.exit = true;
+                    break;
+                }
+
+                out.writeUTF("GAME CReady"); // Client ready
                 out.flush();
                 System.out.println("-Waiting- Received: " + response);
 
             }
+
+            turn = in.readUTF();
+            turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
+            System.out.println("TURN: " + turn);
+            game.setTurnLabel(turn);
+        }
+
+        if(game.exit){
+            System.out.println("Within game.exit block");
+            game.exit = false;
+            out.writeUTF("GAME Exit");
+            System.out.println("Reading response...");
+            String response = in.readUTF();
+            response = response.substring(response.indexOf(' ')).trim();
+            System.out.println("response: " + response);
+            game.setTurnLabel(response);
+            game.displayMainMenu();
+            return;
         }
 
         // Got "over"
         // Display "Win" "Lost" "Tie"
         System.out.println("Final Message: " + turn);
+
+        // Ensure all updates to board are made so they match both players
+        updateBoard();
+
+        // Get "TIE" / "WON" / "LOST" message
+        String gameEnd = in.readUTF();
+        gameEnd = gameEnd.substring(gameEnd.indexOf(' ')).trim();
+        game.setTurnLabel(gameEnd);
+
+        // Disable game
+        game.enableButtons(false);
+
+        // Wait for exit button to be clicked
     }
 
     public void updateBoard() throws IOException{
@@ -343,8 +368,9 @@ public class Client {
      * Preconditions:
      * Postconditions:
      */
-    public void waitForGameStart() throws IOException{
+    public void waitForGameStart(String gameId) throws IOException{
         if(game.currentPage().equals("HOST")){
+            game.enableSubmitButton(false);
             String response = "";
 
             while(!game.hostBackClicked && !response.equals("ready")){
@@ -358,11 +384,21 @@ public class Client {
                 game.setGameNameText("");
                 out.writeUTF("exit");
                 System.out.println("Clicking back after waiting for game");
+                game.enableSubmitButton(true);
                 return;
             }
 
+            // Allow client to submit other games again
+            game.enableSubmitButton(true);
+
+            // Remove game from list
+            game.removeHost(gameId);
+            game.setGameNameText("");
+
             // Game starting
             playGame();
+
+
 
 
 
