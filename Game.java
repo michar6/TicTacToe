@@ -92,10 +92,13 @@ public class Game {
     }
 
 
-    /* playGame:
-     * Preconditions: Socket of the associated player deciding, within function,
-     *                which procedure to follow whether "Wait" or "Your Turn."
-     * Postconditions: Loops through game loop until gameOver() returns true.
+    
+    /**
+     * Prompt player for their turn, record their move, update both player's boards.
+     * If player exits, end game.
+     * 
+     * @param player			socket of the associated player
+     * @throws IOException
      */
     public void playGame(Socket player) throws IOException {
         try{
@@ -114,8 +117,10 @@ public class Game {
 
                 if (player == player1) { // PLAYER ONE
                     System.out.println("-------------PLAYER ONE--------------");
+                    // If player 1's turn, prompt for move
                     if (playerTurn == 1) {
                         System.out.println("p1 turn");
+                        // Prompt player for turn, break loop if they exit game
                         if(!commWithPlayer(p1Out, p1In, PLAYER_ONE_MARK)) {
                             playerExit = true;
                             break;
@@ -124,6 +129,7 @@ public class Game {
                         movesMade++;
                         p2Out.writeUTF("GAME Ready");
                         p2Out.flush();
+                    // If not player 1's turn, wait
                     } else {
                         System.out.println("p1 wait");
                         p1Out.writeUTF("GAME Wait");
@@ -137,9 +143,10 @@ public class Game {
                     System.out.println("--end P1---------------------------------");
                 } else if (player == player2) {
                     System.out.println("=============PLAYER TWO=============");
-
-                    if (playerTurn == 2) { // PLAYER TWO
+                    // If player 2's turn, prompt for move
+                    if (playerTurn == 2) {
                         System.out.println("p2 turn");
+                        // Prompt player for turn, break loop if they exit game
                         if(!commWithPlayer(p2Out, p2In, PLAYER_TWO_MARK)) {
                             playerExit = true;
                             break;
@@ -147,7 +154,7 @@ public class Game {
                         movesMade++;
                         p1Out.writeUTF("GAME Ready");
                         p1Out.flush();
-
+                    // If not player 2's turn, wait
                     } else {
                         System.out.println("p2 wait");
                         p2Out.writeUTF("GAME Wait");
@@ -214,6 +221,18 @@ public class Game {
         }
     }
 
+    
+    
+    /**
+     * Prompt the player for their move, read it in.
+     * Mark board with updated move, send updated board, switch which player's turn.
+     * 
+     * @param out			Data stream for writing to player socket
+     * @param in			Data stream for reading from player socket
+     * @param mark			Mark associated with the player
+     * @return				False if player exits game; else, True
+     * @throws IOException
+     */
     public boolean commWithPlayer(DataOutputStream out, DataInputStream in, char mark) throws IOException{
         out.writeUTF("GAME Your Turn");
 
@@ -240,6 +259,15 @@ public class Game {
         return true;
     }
 
+    
+    
+    /**
+     * Update the player of the board's current configuration.
+     * Send every char on the board to the player socket.
+     * 
+     * @param out			Data stream for writing to player socket
+     * @throws IOException
+     */
     public void sendUpdatedBoard(DataOutputStream out) throws IOException {
         for(int i = 0; i < board.length; i++){
             for(int j = 0; j < board[i].length; j++){
@@ -250,6 +278,14 @@ public class Game {
         System.out.println();
     }
 
+    
+    
+    /**
+     * Make a mark on the board at the specified position
+     * 
+     * @param indexToMark	position in the board to mark
+     * @param mark			mark to place at position
+     */
     public void markBoard(int indexToMark, char mark){
         System.out.println("Index To Mark: " + indexToMark);
         int row = indexToMark / 10;

@@ -14,7 +14,7 @@ import java.util.Set;
  * Will register current client whenever they "Submit" in "Host" panel
  */
 public class Client {
-	private GameWindow game;            // UI for user to interact with
+	private GameWindow gameWindow;            // UI for user to interact with
 	private Socket socket;              // Connection to server
 	private DataInputStream in;         // Streaming input from server
 	private DataOutputStream out;       // Streaming output to server
@@ -27,7 +27,7 @@ public class Client {
 		if(!setupConnections(hostname, port)) { 
 			System.out.println("Error setting up connection");
 		}
-		game = new GameWindow();
+		gameWindow = new GameWindow();
 	}
 	
 	/* setupConnections: Helper function used by constructor
@@ -65,28 +65,35 @@ public class Client {
 		out.close();
 	}
 
-    /* connected:
-     * Preconditions:
-     * Postconditions:
+	
+	
+    /**
+     * Check whether the Client's socket is connected
+     * 
+     * @return	False if socket is connected; else, True
      */
 	public boolean connected(){
 	    if(socket == null) return false;
 	    else return socket.isConnected();
     }
 
-    /* mainOperation:
-     * Preconditions:
-     * Postconditions:
+	
+	
+    /**
+     * Check which page GUI is on, execute appropriate function calls.
+     * Loop until GUI is on exit screen.
+     * 
+     * @throws IOException
      */
     public void mainOperation() throws IOException{
 
-        while (!game.exit) {
+        while (!gameWindow.exit) {
             // Handle GUI input
             System.out.print("");                   // Required ??
 
             // Figure out which page we're located in
-            if (game.currentPage().equals("JOIN")) joinOperation();
-            else if (game.currentPage().equals("HOST"))
+            if (gameWindow.currentPage().equals("JOIN")) joinOperation();
+            else if (gameWindow.currentPage().equals("HOST"))
                 hostOperation();
             else { } // Main Menu
         }
@@ -95,9 +102,12 @@ public class Client {
 
     }
 
-    /* joinOperation:
-     * Preconditions:
-     * Postconditions:
+    
+    
+    /**
+     * 
+     * 
+     * @throws IOException
      */
     public void joinOperation() throws IOException{
 //        System.out.println("IN JOIN OPERATION");
@@ -109,17 +119,16 @@ public class Client {
         Thread t = new Thread(new Runnable(){
             public void run(){
                 try {
-                    //int gameListCount = in.readInt();
-                    //System.out.println(gameListCount);
+                	// Read in available games
                     String gameEntry = in.readUTF();
-//                    gameEntry = gameEntry.substring(gameEntry.lastIndexOf(' ')).trim();
                     System.out.println("Updating Join List");
                     System.out.println("GameEntry: " + gameEntry);
                     while(!gameEntry.contains("/.Done")){
                         System.out.println(gameEntry);
                         gameEntry = gameEntry.substring(gameEntry.lastIndexOf(' ')).trim();
                         System.out.println(gameEntry);
-                        game.addHost(gameEntry);
+                        // update GUI with available game
+                        gameWindow.addHost(gameEntry);
                         gameEntry = in.readUTF();
                     }
                     System.out.println("Done listing all games");
@@ -134,21 +143,21 @@ public class Client {
         // ---------------------- Submit or Back clicked ----------------------
         System.out.println("Outside of thread");
 
-        while(!game.joinBackClicked && !game.joinSubmit){ System.out.print("");}
+        while(!gameWindow.joinBackClicked && !gameWindow.joinSubmit){ System.out.print("");}
 
-        if(game.joinBackClicked){
-            game.joinBackClicked = false;
-            game.removeAll();
+        if(gameWindow.joinBackClicked){
+            gameWindow.joinBackClicked = false;
+            gameWindow.removeAll();
             out.writeUTF("exit");
             return;
         }
 
-        if(game.joinSubmit && !game.clientList.isSelectionEmpty()){
+        if(gameWindow.joinSubmit && !gameWindow.clientList.isSelectionEmpty()){
             System.out.println("Join Submit Clicked");
-            game.joinSubmit = false;
+            gameWindow.joinSubmit = false;
 
             // ---------------------- Obtain selected game --------------------
-            String selectedGame = (String)game.clientList.getSelectedValue();
+            String selectedGame = (String)gameWindow.clientList.getSelectedValue();
             System.out.println("Selected Game: " + selectedGame);
 
             // ---------------------- Send request to connect to game ---------
@@ -156,15 +165,15 @@ public class Client {
             String response = in.readUTF();
             System.out.println("response: " + response);
             if(response.equalsIgnoreCase("connected")){
-                game.removeAll();
+                gameWindow.removeAll();
                 playGame();
 
             } else {
                 return;
             }
         } else {
-            game.removeAll();
-            game.joinSubmit = false;
+            gameWindow.removeAll();
+            gameWindow.joinSubmit = false;
             return;
         }
     }
@@ -176,45 +185,45 @@ public class Client {
      */
     public void hostOperation() throws IOException{
 //        System.out.println("IN HOST OPERATION");
-        game.setStatusText("");
-        while(!game.hostBackClicked && !game.hostSubmit){ System.out.print("");}
+        gameWindow.setStatusText("");
+        while(!gameWindow.hostBackClicked && !gameWindow.hostSubmit){ System.out.print("");}
 
-        if(game.hostBackClicked){
-            game.hostBackClicked = false;
-            game.setGameNameText("");
+        if(gameWindow.hostBackClicked){
+            gameWindow.hostBackClicked = false;
+            gameWindow.setGameNameText("");
             return;
         }
 
-        if(game.hostSubmit){
+        if(gameWindow.hostSubmit){
             System.out.println("Host Submit Clicked");
-            game.hostSubmit = false;
+            gameWindow.hostSubmit = false;
 
             // ---------------------- Check host name validity ----------------
-            String gameId = game.getGameName();
+            String gameId = gameWindow.getGameName();
             System.out.println("GameID: " + gameId);
             if(gameId == null || gameId.length() <= 0 || gameId.isEmpty()){
-                game.setStatusText("invalid host name");
-                while(!game.hostBackClicked && !game.hostSubmit){
+                gameWindow.setStatusText("invalid host name");
+                while(!gameWindow.hostBackClicked && !gameWindow.hostSubmit){
                     System.out.print("");
-                    if(game.hostSubmit){
-                        gameId = game.getGameName();
+                    if(gameWindow.hostSubmit){
+                        gameId = gameWindow.getGameName();
                         System.out.println("host submit clicked");
                         System.out.println("GameID: " + gameId);
                         if(gameId == null || gameId.length() <= 0 || gameId.isEmpty()){
-                            game.setStatusText("invalid host name");
-                            game.hostSubmit = false;
+                            gameWindow.setStatusText("invalid host name");
+                            gameWindow.hostSubmit = false;
                         } else {
-                            game.setStatusText("Valid host name");
+                            gameWindow.setStatusText("Valid host name");
                         }
                     }
 
-                    if(game.hostBackClicked){
-                        game.hostBackClicked = false;
-                        game.setGameNameText("");
+                    if(gameWindow.hostBackClicked){
+                        gameWindow.hostBackClicked = false;
+                        gameWindow.setGameNameText("");
                         return;
                     }
                 }
-                game.hostSubmit = false;
+                gameWindow.hostSubmit = false;
             } else {
                 System.out.println("Valid host name first try");
             }
@@ -226,10 +235,10 @@ public class Client {
             String response = in.readUTF();
             System.out.println("Server response: " + response);
             if(response.equals("invalid")) {
-                game.setStatusText("Game " + gameId + " already exists");
+                gameWindow.setStatusText("Game " + gameId + " already exists");
                 return;
             }
-            game.setStatusText("Game " + gameId + " created.\nWaiting for opponent.");
+            gameWindow.setStatusText("Game " + gameId + " created.\nWaiting for opponent.");
             System.out.println(gameId + " is valid");
 
             // ---------------------- Create new game -------------------------
@@ -246,12 +255,12 @@ public class Client {
         System.out.println(socket + " in game" );
 
         // ---------------------- Display game board for both players ---------
-        game.displayGameBoard();
+        gameWindow.displayGameBoard();
 
         // ---------------------- Modify label text on game board -------------
         String player = in.readUTF();
         player = player.substring(player.indexOf(' ')).trim();
-        game.setGameLabel(player);
+        gameWindow.setGameLabel(player);
 
         // ---------------------- "your turn" or "wait" -----------------------
 
@@ -260,9 +269,9 @@ public class Client {
         turn = in.readUTF();
         turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
         System.out.println("TURN: " + turn);
-        game.setTurnLabel(turn);
-        game.exit = false;
-        while(!turn.equalsIgnoreCase("Over") && !game.exit) { // Also check if "Exit" is clicked
+        gameWindow.setTurnLabel(turn);
+        gameWindow.exit = false;
+        while(!turn.equalsIgnoreCase("Over") && !gameWindow.exit) { // Also check if "Exit" is clicked
 
             if (turn.equalsIgnoreCase("Your Turn")) {
                 // ---------------------- Check for updates on board ----------
@@ -270,18 +279,18 @@ public class Client {
 
                 System.out.println("-Playing- After thread");
                 // ---------------------- Mark board --------------------------
-                while (!game.TTTButtonClicked && !game.exit) { System.out.print(""); }
-                if(game.exit) {
+                while (!gameWindow.TTTButtonClicked && !gameWindow.exit) { System.out.print(""); }
+                if(gameWindow.exit) {
                     System.out.println("WAS ABOUT TO MAKE MOVE BUT EXITED");
                     break;
                 }
-                game.TTTButtonClicked = false;
+                gameWindow.TTTButtonClicked = false;
                 System.out.println("-Playing- After click");
 
                 // ---------------------- Send update -------------------------
-                out.writeUTF("GAME mark " + game.TTTButton);
+                out.writeUTF("GAME mark " + gameWindow.TTTButton);
                 out.flush();
-                System.out.println("-Playing- Sent: " + game.TTTButton);
+                System.out.println("-Playing- Sent: " + gameWindow.TTTButton);
                 String response = in.readUTF();
                 System.out.println("-Playing- Received: " + response);
 
@@ -289,7 +298,7 @@ public class Client {
 
             } else {
                 // Disable board
-                game.enableButtons(false);
+                gameWindow.enableButtons(false);
 
                 System.out.println("Waiting and waiting for response");
                 String response = in.readUTF();
@@ -306,7 +315,7 @@ public class Client {
 
                 if(response.equalsIgnoreCase("Exited")) {
                     System.out.println("WAS WAITING NOW EXITED");
-                    game.exit = true;
+                    gameWindow.exit = true;
                     break;
                 }
 
@@ -319,19 +328,19 @@ public class Client {
             turn = in.readUTF();
             turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
             System.out.println("TURN: " + turn);
-            game.setTurnLabel(turn);
+            gameWindow.setTurnLabel(turn);
         }
 
-        if(game.exit){
+        if(gameWindow.exit){
             System.out.println("Within game.exit block");
-            game.exit = false;
+            gameWindow.exit = false;
             out.writeUTF("GAME Exit");
             System.out.println("Reading response...");
             String response = in.readUTF();
             response = response.substring(response.indexOf(' ')).trim();
             System.out.println("response: " + response);
-            game.setTurnLabel(response);
-            game.displayMainMenu();
+            gameWindow.setTurnLabel(response);
+            gameWindow.displayMainMenu();
             return;
         }
 
@@ -345,19 +354,19 @@ public class Client {
         // Get "TIE" / "WON" / "LOST" message
         String gameEnd = in.readUTF();
         gameEnd = gameEnd.substring(gameEnd.indexOf(' ')).trim();
-        game.setTurnLabel(gameEnd);
+        gameWindow.setTurnLabel(gameEnd);
 
         // Disable game
-        game.enableButtons(false);
+        gameWindow.enableButtons(false);
 
         // Wait for exit button to be clicked
-        while(!game.exit){System.out.print("");}
+        while(!gameWindow.exit){System.out.print("");}
 
         // Return to main menu
-        if(game.exit){
-            game.exit = false;
-            game.displayMainMenu();
-            game.enableButtons(true);
+        if(gameWindow.exit){
+            gameWindow.exit = false;
+            gameWindow.displayMainMenu();
+            gameWindow.enableButtons(true);
             return;
         }
     }
@@ -368,13 +377,13 @@ public class Client {
                 char buttonStatus = in.readChar();
                 System.out.println(buttonStatus);
                 if (buttonStatus == 'G') {
-                    game.buttons[i][j].setEnabled(true);
+                    gameWindow.buttons[i][j].setEnabled(true);
                 } else if (buttonStatus == 'X') {
-                    game.buttons[i][j].setEnabled(false);
-                    game.buttons[i][j].setText("X");
+                    gameWindow.buttons[i][j].setEnabled(false);
+                    gameWindow.buttons[i][j].setText("X");
                 } else if (buttonStatus == 'O') {
-                    game.buttons[i][j].setEnabled(false);
-                    game.buttons[i][j].setText("O");
+                    gameWindow.buttons[i][j].setEnabled(false);
+                    gameWindow.buttons[i][j].setText("O");
                 }
             }
         }
@@ -385,31 +394,31 @@ public class Client {
      * Postconditions:
      */
     public void waitForGameStart(String gameId) throws IOException{
-        if(game.currentPage().equals("HOST")){
-            game.enableSubmitButton(false);
+        if(gameWindow.currentPage().equals("HOST")){
+            gameWindow.enableSubmitButton(false);
             String response = "";
 
-            while(!game.hostBackClicked && !response.equals("ready")){
+            while(!gameWindow.hostBackClicked && !response.equals("ready")){
                 System.out.print("");
                 if(in.available() > 0) response = in.readUTF();
             }
 
             // Clicked back
-            if(game.hostBackClicked){
-                game.hostBackClicked = false;
-                game.setGameNameText("");
+            if(gameWindow.hostBackClicked){
+                gameWindow.hostBackClicked = false;
+                gameWindow.setGameNameText("");
                 out.writeUTF("exit");
                 System.out.println("Clicking back after waiting for game");
-                game.enableSubmitButton(true);
+                gameWindow.enableSubmitButton(true);
                 return;
             }
 
             // Allow client to submit other games again
-            game.enableSubmitButton(true);
+            gameWindow.enableSubmitButton(true);
 
             // Remove game from list
-            game.removeHost(gameId);
-            game.setGameNameText("");
+            gameWindow.removeHost(gameId);
+            gameWindow.setGameNameText("");
 
             // Game starting
             playGame();

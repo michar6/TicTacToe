@@ -503,6 +503,13 @@ public class GameWindow{
 	    clientList.setModel(clientListModel);
     }
 
+    
+    
+    /**
+     * Return which page the GUI is displaying.
+     * 
+     * @return	name of the page which GUI is displaying: MAIN, JOIN, or HOST
+     */
     public String currentPage(){
 	    if(mainMenuPanel.isVisible()) return "MAIN";
 	    else if(joinPanel.isVisible()) return "JOIN";

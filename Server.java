@@ -7,6 +7,8 @@ public class Server {
 	private ServerSocket welcomeSocket;
     private GameManager gameManager;
 
+    
+    
 	/* Default C'tor: Setup welcome socket for new clients
 	 * Preconditions:
 	 * Postconditions:
@@ -15,6 +17,8 @@ public class Server {
 	    welcomeSocket = new ServerSocket(port);
 	    gameManager = new GameManager();
 	}
+	
+	
 
     /* contains:
      * Preconditions:
@@ -23,6 +27,8 @@ public class Server {
 	public boolean contains(String gameId){
 	    return gameManager.contains(gameId.toLowerCase().trim());
     }
+	
+	
 
     /* createGame:
      * Preconditions:
@@ -32,6 +38,8 @@ public class Server {
 	    return gameManager.createGame(gameId, player);
     }
 
+    
+    
     /* createGame:
      * Preconditions:
      * Postconditions:
@@ -39,6 +47,8 @@ public class Server {
     public boolean removeGame(String gameId){
         return gameManager.removeGame(gameId);
     }
+    
+    
 
     /* getGameReadyStatus:
      * Preconditions:
@@ -47,6 +57,8 @@ public class Server {
     public boolean getGameReadyStatus(String gameId){
         return gameManager.getGameReadyStatus(gameId);
     }
+    
+    
 
     /* getGame: Used to manipulate game object
      * Preconditions:
@@ -56,14 +68,19 @@ public class Server {
         return gameManager.getGame(gameId);
     }
 
-    /* listGames:
-     * Preconditions:
-     * Postconditions: Return a set of games available to play
+    
+    
+    /**
+     * Return set of games available to play
+     * 
+     * @return set of games ready to play
      */
     public Set<String> listGames(){
         return gameManager.listGames();
     }
 
+    
+    
 	public static void main(String args[]) {
 		try {
 		    // Create server

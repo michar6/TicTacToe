@@ -31,9 +31,12 @@ public class GameManager {
         return availableGames.containsKey(gameId);
     }
 
-    /* listGames():
-     * Preconditions:
-     * Postconditions: Return a set of all the game ID's (Strings)
+    
+    
+    /**
+     * Return set of games available to play
+     * 
+     * @return set of all available games' IDs
      */
     public Set<String> listGames(){
         return availableGames.keySet();
@@ -61,9 +64,13 @@ public class GameManager {
         return true;
     }
 
-    /* removeGame:
-     * Preconditions: Unique gameID
-     * Postconditions: Create and add new game to availableGames
+    
+    
+    /**
+     * Remove specified game from availableGames
+     * 
+     * @param gameId	game specified to remove
+     * @return			True
      */
     public boolean removeGame(String gameId){
         availableGames.remove(gameId);

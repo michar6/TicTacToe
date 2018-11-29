@@ -79,24 +79,30 @@ class ClientHandler extends Thread{
         return;
     }
 
-    /* joinOperation:
-     * Preconditions:
-     * Postconditions:
+    /**
+     * Search all games, send client list of available ones (<2 players).
+     * Read which game client specifies, sets client as second player for game.
+     * 
+     * @throws IOException
      */
     private void joinOperation() throws IOException{
         System.out.println("JOIN OPERATION");
 
         // ---------------------- Send over available games -------------------
         Thread t = new Thread(new Runnable(){
-            String gameList[] = Arrays.copyOf(server.listGames().toArray(), server.listGames().toArray().length, String[].class);
+        	// Set of games available to play
+            String gameList[] = Arrays.copyOf(server.listGames().toArray(),
+            		server.listGames().toArray().length, String[].class);
             public void run(){
                 try {
-                    //out.writeUTF("JOIN Start List");
                     System.out.println(gameList.length);
+                    // Run through available games
                     for(int i = 0; i < gameList.length; i++){
                         System.out.println(gameList[i]);
 
+                        // If the specified game doesn't have two players already
                         if(!server.getGameReadyStatus(gameList[i])){
+                        	// Write game to client
                             out.writeUTF("JOIN List " + gameList[i]);
                         }
                     }
@@ -132,15 +138,17 @@ class ClientHandler extends Thread{
 
     }
 
-    /* gameOperation:
-     * Preconditions:
-     * Postconditions:
+    
+    /**
+     * Connect client to current game, prompt for their move
+     * 
+     * @throws IOException
      */
     public void gameOperation() throws IOException{
         System.out.println("GAME OPERATION IN CLIENT HANDLER FOR " + clientSocket);
         System.out.println("Current game ID: " + currentGameId);
 
-        // Play game
+        // Give player a turn in the current game
         server.getGame(currentGameId).playGame(clientSocket);
 
         // Remove game from list since two players are already in
