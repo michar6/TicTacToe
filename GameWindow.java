@@ -331,7 +331,7 @@ public class GameWindow{
 
         gameExitButton.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent arg0){
-                exit = true;
+            	exit = true;
             }
         });
 

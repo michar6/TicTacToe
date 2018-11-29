@@ -175,17 +175,20 @@ public class Game {
             // ---------------------- Let both players know game is over ------
             if(playerExit){
                 if(player == player1) {
+                    System.out.println("Player 1 exiting");
                     p1Out.writeUTF("GAME Exited");
-                    if(playerTurn == 1){
+                    //if(playerTurn == 1){
                         p2Out.writeUTF("GAME Exited");
-                    }
+                    //}
 
                 }
                 else {
+                    System.out.println("Player 2 exiting");
                     p2Out.writeUTF("GAME Exited");
-                    if(playerTurn == 2){
+
+//                    if(playerTurn == 2){
                         p1Out.writeUTF("GAME Exited");
-                    }
+//                    }
                 }
                 return;
             }
@@ -244,7 +247,7 @@ public class Game {
         System.out.println(indexRequest);
         indexRequest = indexRequest.substring(indexRequest.lastIndexOf(' ')).trim();
         System.out.println(indexRequest);
-        if(indexRequest.equalsIgnoreCase("Exit")) return false;
+        if(indexRequest.equalsIgnoreCase("Exit") || indexRequest.equalsIgnoreCase("Exited")) return false;
         int indexToMark = Integer.parseInt(indexRequest);
         System.out.println("indexToMark: " + indexToMark);
         markBoard(indexToMark, mark);

@@ -19,7 +19,8 @@ public class Client {
 	private DataInputStream in;         // Streaming input from server
 	private DataOutputStream out;       // Streaming output to server
 	
-	/* Default C'tor: 
+	/**
+     * Default C'tor:
 	 * Preconditions: 
 	 * Postconditions: Initializes socket, input, and output streams
 	 */
@@ -30,7 +31,8 @@ public class Client {
 		gameWindow = new GameWindow();
 	}
 	
-	/* setupConnections: Helper function used by constructor
+	/**
+     * setupConnections: Helper function used by constructor
 	 * Preconditions:
 	 * Postconditions:
 	 */
@@ -55,7 +57,8 @@ public class Client {
 		}
 	}
 
-    /* closeConnections:
+    /**
+     *  closeConnections:
      * Preconditions:
      * Postconditions:
      */
@@ -65,8 +68,6 @@ public class Client {
 		out.close();
 	}
 
-	
-	
     /**
      * Check whether the Client's socket is connected
      * 
@@ -77,8 +78,6 @@ public class Client {
 	    else return socket.isConnected();
     }
 
-	
-	
     /**
      * Check which page GUI is on, execute appropriate function calls.
      * Loop until GUI is on exit screen.
@@ -102,11 +101,10 @@ public class Client {
 
     }
 
-    
-    
     /**
-     * 
-     * 
+     * joinOperation:
+     * Preconditions:
+     * Postconditions:
      * @throws IOException
      */
     public void joinOperation() throws IOException{
@@ -178,7 +176,7 @@ public class Client {
         }
     }
 
-    /* hostOperation: The user can either go back to main menu or enter a game
+    /** hostOperation: The user can either go back to main menu or enter a game
      *                name to host, and submit it to the server.
      * Preconditions:
      * Postconditions:
@@ -246,7 +244,8 @@ public class Client {
         }
     }
 
-    /* playGame:
+    /**
+     * playGame:
      * Preconditions:
      * Postconditions:
      */
@@ -278,8 +277,25 @@ public class Client {
                 updateBoard();
 
                 System.out.println("-Playing- After thread");
+                String response = "";
+                if(in.available() > 0) {
+                    response = in.readUTF();
+                    response = response.substring(response.indexOf(' ')).trim();
+                }
                 // ---------------------- Mark board --------------------------
-                while (!gameWindow.TTTButtonClicked && !gameWindow.exit) { System.out.print(""); }
+                while (!gameWindow.TTTButtonClicked && !gameWindow.exit && !response.equalsIgnoreCase("Exited")) {
+                    System.out.print("");
+                    if(in.available() > 0) {
+                        response = in.readUTF();
+                        response = response.substring(response.indexOf(' ')).trim();
+                        System.out.println("Response: " + response);
+                    }
+                }
+
+                if(response.equalsIgnoreCase("Exited")){
+                    gameWindow.exit = true;
+                }
+
                 if(gameWindow.exit) {
                     System.out.println("WAS ABOUT TO MAKE MOVE BUT EXITED");
                     break;
@@ -291,7 +307,7 @@ public class Client {
                 out.writeUTF("GAME mark " + gameWindow.TTTButton);
                 out.flush();
                 System.out.println("-Playing- Sent: " + gameWindow.TTTButton);
-                String response = in.readUTF();
+                response = in.readUTF();
                 System.out.println("-Playing- Received: " + response);
 
                 updateBoard();
@@ -301,16 +317,25 @@ public class Client {
                 gameWindow.enableButtons(false);
 
                 System.out.println("Waiting and waiting for response");
-                String response = in.readUTF();
-                response = response.substring(response.indexOf(' ')).trim(); // GAME' 'Ready
-                System.out.println("Response length: " + response.length());
-                System.out.println("Response: " + response);
+                //String response = in.readUTF();
+                String response = "";
+                if(in.available() > 0) {
+                    response = in.readUTF();
+                    response = response.substring(response.indexOf(' ')).trim(); // GAME' 'Ready
+                    System.out.println("Response length: " + response.length());
+                    System.out.println("Response: " + response);
+                }
+
                 System.out.println("Wait for Ready");
 
-                while(!response.equalsIgnoreCase("Ready") && !response.equalsIgnoreCase("Exited")) {
-                    System.out.print(".");
-                    response = in.readUTF();
-                    System.out.println("Got response: " + response);
+                while(!response.equalsIgnoreCase("Ready") && !response.equalsIgnoreCase("Exited") && !gameWindow.exit) {
+//                    System.out.print(".");
+                    System.out.println(gameWindow.exit + " and Response : " + response);
+                    if(in.available() > 0) {
+                        response = in.readUTF();
+                        response = response.substring(response.indexOf(' ')).trim(); // GAME' 'Ready
+                    }
+//                    System.out.println("Got response: " + response);
                 }
 
                 if(response.equalsIgnoreCase("Exited")) {
@@ -319,18 +344,25 @@ public class Client {
                     break;
                 }
 
-                out.writeUTF("GAME CReady"); // Client ready
-                out.flush();
-                System.out.println("-Waiting- Received: " + response);
+                if(!gameWindow.exit) {
+                    out.writeUTF("GAME CReady"); // Client ready
+                    out.flush();
+                    System.out.println("-Waiting- Received: " + response);
+                } else{
+                    System.out.println("Game.exit : " + gameWindow.exit);
+                }
 
             }
 
-            turn = in.readUTF();
-            turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
-            System.out.println("TURN: " + turn);
-            gameWindow.setTurnLabel(turn);
+            if(!gameWindow.exit) {
+                turn = in.readUTF();
+                turn = turn.substring(turn.indexOf(' ')).trim(); // GAME' 'Your Turn or GAME' 'Wait
+                System.out.println("TURN: " + turn);
+                gameWindow.setTurnLabel(turn);
+            }
         }
 
+        // Client has exited their game
         if(gameWindow.exit){
             System.out.println("Within game.exit block");
             gameWindow.exit = false;
@@ -341,6 +373,7 @@ public class Client {
             System.out.println("response: " + response);
             gameWindow.setTurnLabel(response);
             gameWindow.displayMainMenu();
+            if(in.available() > 0) System.out.println("Read: " + in.readUTF());
             return;
         }
 
@@ -371,6 +404,11 @@ public class Client {
         }
     }
 
+    /**
+     *  updateBoard:
+     * Preconditions:
+     * Postconditions:
+     */
     public void updateBoard() throws IOException{
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -389,7 +427,7 @@ public class Client {
         }
     }
 
-    /* waitForGameStart:
+    /** waitForGameStart:
      * Preconditions:
      * Postconditions:
      */
