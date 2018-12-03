@@ -56,10 +56,12 @@ public class GameManager {
      */
     public boolean createGame(String gameId, Socket hostPlayer){
         // Game already exists
+        System.out.println("GameManager Initial gameId: " + gameId);
         if(availableGames.containsKey(gameId.toLowerCase())) return false;
 
         // Game can be created
         Game createdGame = new Game(hostPlayer);
+        System.out.println("CreatedGame: " + createdGame);
         availableGames.put(gameId.toLowerCase().trim(), createdGame);
         return true;
     }

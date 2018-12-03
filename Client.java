@@ -227,16 +227,16 @@ public class Client {
             }
 
             // ---------------------- Send request to server ------------------
-            out.writeUTF("HOST " + gameId);
+            out.writeUTF("HOST " + gameId.toLowerCase().trim());
 
             // ---------------------- Server check validity -------------------
             String response = in.readUTF();
             System.out.println("Server response: " + response);
             if(response.equals("invalid")) {
-                gameWindow.setStatusText("Game " + gameId + " already exists");
+                gameWindow.setStatusText("Game (" + gameId.toLowerCase().trim() + ") already exists");
                 return;
             }
-            gameWindow.setStatusText("Game " + gameId + " created.\nWaiting for opponent.");
+            gameWindow.setStatusText("Game " + gameId.toLowerCase().trim() + " created.\nWaiting for opponent.");
             System.out.println(gameId + " is valid");
 
             // ---------------------- Create new game -------------------------

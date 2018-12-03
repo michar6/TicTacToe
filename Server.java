@@ -14,10 +14,9 @@ public class Server {
 	 * Postconditions:
 	 */
 	public Server(int port) throws IOException {
-	    welcomeSocket = new ServerSocket(port);
-	    gameManager = new GameManager();
-	}
-	
+        welcomeSocket = new ServerSocket(port);
+        gameManager = new GameManager();
+    }
 	
 
     /* contains:
@@ -35,6 +34,7 @@ public class Server {
      * Postconditions:
      */
     public boolean createGame(String gameId, Socket player){
+        System.out.println("Servers Create Game: " + gameId);
 	    return gameManager.createGame(gameId, player);
     }
 
